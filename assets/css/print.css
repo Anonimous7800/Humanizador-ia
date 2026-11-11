@@ -1,0 +1,60 @@
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #111827 !important;
+    font-size: 11pt;
+    line-height: 1.4;
+  }
+
+  .app-header .header-actions,
+  .input-section,
+  .results-toolbar,
+  .preview-controls,
+  .toast,
+  .humanize-section,
+  .btn,
+  .theme-toggle,
+  .correction-modal {
+    display: none !important;
+  }
+
+  .app-container {
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .card {
+    border: 1px solid #d1d5db !important;
+    box-shadow: none !important;
+    background: #ffffff !important;
+    page-break-inside: avoid;
+    margin-bottom: 16px !important;
+    padding: 16px !important;
+  }
+
+  .results-grid {
+    display: block !important;
+  }
+
+  .preview-box {
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  .sentence-highlight.hl-ai {
+    background-color: #fecaca !important;
+    border-bottom: 1px solid #ef4444 !important;
+  }
+
+  .sentence-highlight.hl-mixed {
+    background-color: #fef08a !important;
+    border-bottom: 1px solid #f59e0b !important;
+  }
+
+  .app-footer {
+    border-top: 1px solid #d1d5db !important;
+    margin-top: 20px !important;
+    padding-top: 10px !important;
+  }
+}

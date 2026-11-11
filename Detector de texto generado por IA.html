@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Detector de texto generado por IA</title>
+<style>
+:root{--bg:#f6f5f1;--card:#fff;--tx:#1d1d1b;--mut:#6b6a65;--bd:#e2e0d8;--ac:#3b5bdb;--ok:#2f9e44;--mid:#e8a317;--bad:#d6336c;--hl:#ffe3ec;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#17171a;--card:#212125;--tx:#ececea;--mut:#9a9a95;--bd:#33333a;--ac:#748ffc;--ok:#51cf66;--mid:#fcc419;--bad:#f06595;--hl:#4a2335;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#17171a;--card:#212125;--tx:#ececea;--mut:#9a9a95;--bd:#33333a;--ac:#748ffc;--ok:#51cf66;--mid:#fcc419;--bad:#f06595;--hl:#4a2335;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:860px;margin:0 auto;padding:24px 16px 48px}
+h1{font-size:1.6rem;margin:0 0 4px}
+.sub{color:var(--mut);margin:0 0 20px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:16px;margin-bottom:16px}
+textarea{width:100%;min-height:200px;resize:vertical;background:var(--bg);color:var(--tx);border:1px solid var(--bd);border-radius:10px;padding:12px;font:inherit}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:12px}
+button,label.btn{background:var(--ac);color:#fff;border:0;border-radius:10px;padding:10px 18px;font:inherit;font-weight:600;cursor:pointer}
+button.sec,label.btn{background:transparent;color:var(--ac);border:1px solid var(--ac)}
+input[type=file]{display:none}
+.meter{height:14px;border-radius:7px;background:var(--bd);overflow:hidden;margin:10px 0}
+.meter>i{display:block;height:100%;width:0;transition:width .5s}
+.score{font-size:2.6rem;font-weight:800;line-height:1}
+.verdict{font-weight:700;margin-left:8px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.m{border:1px solid var(--bd);border-radius:10px;padding:10px}
+.m b{display:block;font-size:.8rem;color:var(--mut);font-weight:600}
+.m span{font-size:1.2rem;font-weight:700}
+.m small{display:block;color:var(--mut)}
+#hl{white-space:pre-wrap;overflow-wrap:anywhere}
+mark{background:var(--hl);color:inherit;border-radius:4px;padding:0 2px}
+.note{font-size:.85rem;color:var(--mut)}
+.gw{position:relative;max-width:320px;margin:6px auto 0}.g{width:100%;display:block}.gw .score{position:absolute;left:0;right:0;bottom:2px;text-align:center}
+.lg>div{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--bd)}.dot{width:14px;height:14px;border-radius:50%;flex:none}.pc{margin-left:auto;font-weight:700}
+.h1{background:rgba(232,163,23,.28);border-radius:3px}.h2{background:var(--hl);border-radius:3px}#hl b{font-weight:700;text-decoration:underline}
+body{background:radial-gradient(1200px 500px at 50% -10%,rgba(103,65,217,.2),transparent),var(--bg)}
+main{max-width:1180px}
+h1{font-size:2.1rem;letter-spacing:-.02em;background:linear-gradient(90deg,#6741d9,#12b886);-webkit-background-clip:text;background-clip:text;color:transparent}
+.card{border-radius:18px;box-shadow:0 6px 24px rgba(0,0,0,.07)}
+button,label.btn{border-radius:999px}
+#res{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start}
+#res.hide{display:none}
+#res>.card{margin:0}
+#pv{grid-row:span 5;position:sticky;top:8px}
+#res>.card:last-child{grid-column:1/-1}
+.tabs{display:flex;gap:6px;margin-bottom:10px}.tabs button{padding:6px 14px;font-size:.85rem}
+#pvb{max-height:860px;overflow:auto}
+.pgw{position:relative;margin:0 0 12px;border:1px solid var(--bd);border-radius:8px;overflow:hidden;background:#fff}.pgw canvas{width:100%;height:auto;display:block}
+.pgb{position:absolute;top:8px;right:8px;color:#fff;font-weight:700;font-size:.8rem;padding:3px 10px;border-radius:999px}
+.paper{background:#fffdf8;color:#222;font:15px/1.7 Georgia,serif;padding:24px 28px;border:1px solid var(--bd);border-radius:8px;white-space:pre-wrap;overflow-wrap:anywhere}
+.paper .h2{background:#ffd0df}.paper .h1{background:#ffe9a8}
+@media(max-width:900px){#res{display:block}#res>.card{margin-bottom:16px}#pv{position:static}}
+.hide{display:none}
+</style>
+</head>
+<body>
+<main>
+<h1>🔍 Detector de texto generado por IA</h1>
+<p class="sub">Pega un texto o sube un archivo (PDF, DOCX, PPTX, XLSX, ODT, RTF, JSON, TXT, MD, CSV, HTML; puedes subir varios a la vez). El análisis se hace en tu navegador: nada se envía a ningún servidor.</p>
+
+<div class="card">
+<textarea id="t" placeholder="Pega aquí el texto a analizar (mínimo ~80 palabras para un resultado útil)…"></textarea>
+<div class="row">
+<button id="go">Analizar</button>
+<label class="btn">Subir archivo<input type="file" id="f" multiple accept=".txt,.md,.csv,.json,.rtf,.docx,.pptx,.xlsx,.odt,.odp,.pdf,.html"></label>
+<button class="sec" id="clr">Limpiar</button>
+<span class="note" id="wc"></span>
+</div>
+</div>
+
+<div class="card hide" id="fbox"><h3 style="margin-top:0">Documentos analizados</h3><div id="ft"></div></div>
+<div id="res" class="hide">
+<div class="card" id="pv"><h3 style="margin-top:0">📄 Vista previa del documento</h3><div class="tabs" id="pvt"><button id="tabO">Documento</button><button class="sec" id="tabT">Texto marcado</button></div><p class="note" id="pvn"></p><div id="pvb"></div></div>
+<div class="card">
+<h3 style="margin:0">🔎 Resultados de detección de IA</h3>
+<div class="gw"><svg viewBox="0 0 200 110" class="g"><path d="M20 100 A80 80 0 0 1 180 100" fill="none" stroke="#12b886" stroke-width="16" stroke-linecap="round"/><path id="ga" d="M20 100 A80 80 0 0 1 180 100" fill="none" stroke="#6741d9" stroke-width="16" pathLength="100" stroke-dasharray="0 100" style="transition:stroke-dasharray .6s"/></svg><div class="score" id="sc">0%</div></div>
+<div class="verdict" id="vd" style="text-align:center;margin:6px 0"></div>
+<div class="lg" id="lg"></div>
+<p class="note" id="exp"></p>
+<div class="row"><button id="hum">✍️ Humanizar texto</button></div>
+</div>
+<div class="card hide" id="hbox"><h3 style="margin-top:0">Versión humanizada</h3><p class="note" id="hmsg"></p><textarea id="ho" style="min-height:160px"></textarea><div class="row"><button id="cp">Copiar</button><button class="sec" id="re">Analizar esta versión</button><span class="note" id="cpm"></span></div></div>
+<div class="card"><h3 style="margin-top:0">Mapa por secciones</h3><p class="note">Cada barra es una página, diapositiva o bloque de ~250 palabras. Sirve para ver qué partes parecen IA.</p><div id="map"></div></div>
+<div class="card"><h3 style="margin-top:0">Metadatos y huellas forenses</h3><div id="meta"></div></div>
+<div class="card"><h3 style="margin-top:0">Indicadores</h3><div class="grid" id="ms"></div></div>
+<div class="card"><h3 style="margin-top:0">Frases y marcas sospechosas</h3><div id="hl"></div></div>
+</div>
+
+<p class="note">⚠️ Ningún detector es infalible. Un texto muy formal, de un traductor o de alguien que escribe con estilo académico puede dar falsos positivos, y un texto de IA editado a mano puede pasar desapercibido. No uses este resultado como única prueba para acusar a nadie.</p>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script>
+const $=id=>document.getElementById(id);
+const PHRASES=["en conclusión","en resumen","en definitiva","cabe destacar","cabe señalar","es importante destacar","es importante señalar","es fundamental","es crucial","juega un papel crucial","juega un papel fundamental","en el mundo actual","en la era digital","en el panorama actual","en un mundo cada vez más","un abanico de","una amplia gama de","multifacético","sin lugar a dudas","no solo","sino también","por otro lado","además","asimismo","por lo tanto","en última instancia","desempeña un papel","fomentar","potenciar","navegar por","un testimonio de","en el ámbito de","como modelo de lenguaje","como ia","espero que esto ayude","no dudes en","in conclusion","in summary","it is important to note","it is worth noting","delve","tapestry","landscape","furthermore","moreover","as an ai","language model","plays a crucial role","a testament to","in today’s","seamless","leverage","navigate the","i hope this helps","feel free to"];
+const MARKERS=[/\*\*[^*]+\*\*/g,/^#{1,4}\s/gm,/^\s*[-•*]\s/gm,/—/g,/^\s*\d+\.\s/gm];
+const STARTERS=["además","asimismo","por lo tanto","sin embargo","por otro lado","en conclusión","en resumen","por ende","finalmente","en primer lugar","en segundo lugar","por último","furthermore","moreover","additionally","however","in conclusion","overall"];
+const PERSONAL=/\b(yo|me|mi|mis|creo|pienso|siento|jaja|jeje|xd|pues|bueno|oye|i|my|lol|honestly)\b/gi;
+
+const mean=a=>a.reduce((x,y)=>x+y,0)/(a.length||1);
+const sd=a=>{const m=mean(a);return Math.sqrt(mean(a.map(x=>(x-m)**2)))};
+const esc=s=>s.replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+const clamp=(x,a=0,b=1)=>Math.max(a,Math.min(b,x));
+
+function analyze(text){
+  const words=(text.toLowerCase().match(/[\p{L}\p{N}’']+/gu)||[]);
+  const sents=text.split(/(?<=[.!?…])\s+|\n+/).map(s=>s.trim()).filter(s=>s.split(/\s+/).length>2);
+  const paras=text.split(/\n\s*\n/).map(s=>s.trim()).filter(Boolean);
+  const lower=text.toLowerCase();
+  const out=[];
+
+  // 1. Burstiness
+  const sl=sents.map(s=>s.split(/\s+/).length);
+  const cv=sl.length>2?sd(sl)/mean(sl):0.6;
+  const sB=clamp((0.65-cv)/0.4);
+  out.push({n:"Variación de frases",v:cv.toFixed(2),s:sB,d:"Los humanos alternan frases cortas y largas; la IA tiende a ser más uniforme (valor bajo = sospechoso)."});
+
+  // 2. Lexical diversity (MATTR-like, window 50)
+  let ttr=0.7;
+  if(words.length>=50){const w=50,v=[];for(let i=0;i+w<=words.length;i+=10){v.push(new Set(words.slice(i,i+w)).size/w)}ttr=mean(v)}
+  const sT=clamp((0.78-ttr)/0.2);
+  out.push({n:"Diversidad léxica",v:ttr.toFixed(2),s:sT,d:"Proporción de palabras distintas por ventana de 50 palabras."});
+
+  // 3. Repeated trigrams
+  const tri={};let rep=0;
+  for(let i=0;i<words.length-2;i++){const k=words.slice(i,i+3).join(" ");tri[k]=(tri[k]||0)+1}
+  Object.values(tri).forEach(c=>{if(c>1)rep+=c-1});
+  const rr=rep/Math.max(1,words.length-2);
+  const sR=clamp(rr/0.08);
+  out.push({n:"Repetición de patrones",v:(rr*100).toFixed(1)+"%",s:sR,d:"Secuencias de 3 palabras que se repiten."});
+
+  // 4. Stock phrases
+  const hits=[];
+  PHRASES.forEach(p=>{let i=-1;while((i=lower.indexOf(p,i+1))>-1)hits.push([i,i+p.length])});
+  const per100=hits.length/Math.max(1,words.length)*100;
+  const sP=clamp(per100/2.5);
+  out.push({n:"Muletillas típicas de IA",v:hits.length+" ("+per100.toFixed(1)+"/100 pal.)",s:sP,d:"Expresiones como “cabe destacar”, “en conclusión”, “delve”…"});
+
+  // 5. Sentence starters
+  const st=sents.filter(s=>STARTERS.some(x=>s.toLowerCase().startsWith(x))).length;
+  const sS=clamp(st/Math.max(1,sents.length)/0.2);
+  out.push({n:"Conectores al inicio",v:st+" de "+sents.length,s:sS,d:"Frases que arrancan con conectores formales."});
+
+  // 6. Paragraph uniformity
+  let sU=0.3,pv="n/d";
+  if(paras.length>=3){const pl=paras.map(p=>p.split(/\s+/).length);const c=sd(pl)/mean(pl);pv=c.toFixed(2);sU=clamp((0.5-c)/0.35)}
+  out.push({n:"Uniformidad de párrafos",v:pv,s:sU,d:"Párrafos de longitud muy parecida suelen indicar generación automática."});
+
+  // 7. Chatbot formatting residue
+  let mk=0;MARKERS.forEach(r=>{mk+=(text.match(r)||[]).length});
+  const sM=clamp(mk/Math.max(3,sents.length*0.4));
+  out.push({n:"Formato de chatbot",v:mk+" marcas",s:sM,d:"Negritas **así**, títulos #, viñetas y rayas largas (—)."});
+
+  // 8. Human markers (reduces score)
+  const pers=(text.match(PERSONAL)||[]).length;
+  const sH=clamp(pers/Math.max(1,words.length)/0.03);
+  out.push({n:"Marcas personales/coloquiales",v:pers,s:-sH,d:"Primera persona, coloquialismos o expresiones informales (restan sospecha)."});
+
+  const W=[0.22,0.18,0.08,0.22,0.1,0.08,0.12];
+  let score=0;for(let i=0;i<7;i++)score+=out[i].s*W[i];
+  score=clamp(score+out[7].s*0.15)*100;
+  if(words.length<80)score=score*0.7;
+  return{score:Math.round(score),out,hits,words:words.length};
+}
+
+function render(text,r){
+  $("res").classList.remove("hide");
+  const s=r.score,col=s<35?"var(--ok)":s<60?"var(--mid)":"var(--bad)";
+  $("sc").textContent=s+"%";$("sc").style.color=col;
+  $("bar").style.width=s+"%";$("bar").style.background=col;
+  $("vd").textContent=s<35?"Probablemente humano":s<60?"Resultado mixto / incierto":"Probablemente generado por IA";
+  $("vd").style.color=col;
+  $("exp").textContent=r.words<80?"El texto es corto (menos de 80 palabras), así que la fiabilidad es baja.":"Puntuación estimada a partir de "+r.words+" palabras.";
+  $("ms").innerHTML=r.out.map(m=>{const c=m.s>0.6?"var(--bad)":m.s>0.3?"var(--mid)":"var(--ok)";return `<div class="m"><b>${m.n}</b><span style="color:${c}">${m.v}</span><small>${m.d}</small></div>`}).join("");
+  // highlight
+  const lower=text.toLowerCase();const hs=[...r.hits].sort((a,b)=>a[0]-b[0]);
+  let o="",p=0;
+  for(const [a,b] of hs){if(a<p)continue;o+=esc(text.slice(p,a))+"<mark>"+esc(text.slice(a,b))+"</mark>";p=b}
+  o+=esc(text.slice(p));
+  $("hl").innerHTML=r.hits.length?o:"No se encontraron muletillas típicas. "+"<br><br>"+esc(text);
+  $("res").scrollIntoView({behavior:"smooth"});
+}
+
+function run(){const t=$("t").value.trim();if(!t){$("wc").textContent="Escribe o pega algún texto.";return}render(t,analyze(t))}
+const REPL=[[/\ben conclusión,?\s*/gi,"Al final, "],[/\ben resumen,?\s*/gi,"En corto, "],[/\ben definitiva,?\s*/gi,"Al final, "],[/\bcabe (?:destacar|señalar) que\s*/gi,""],[/\bes importante (?:destacar|señalar) que\s*/gi,""],[/\ben el mundo actual\b/gi,"hoy"],[/\ben la era digital\b/gi,"hoy"],[/\ben el panorama actual\b/gi,"hoy"],[/\bun abanico de\b/gi,"varios"],[/\buna amplia gama de\b/gi,"muchos"],[/\bsin lugar a dudas\b/gi,"seguro"],[/\b(?:juega|desempeña) un papel (?:crucial|fundamental)\b/gi,"es clave"],[/\bmultifacético\b/gi,"complejo"],[/\bfomentar\b/gi,"impulsar"],[/\bpotenciar\b/gi,"mejorar"],[/\bademás,\s*/gi,"y "],[/\basimismo,\s*/gi,"también "],[/\bpor lo tanto,?\s*/gi,"así que "],[/\bpor otro lado,\s*/gi,"por su parte, "],[/\bin conclusion,?\s*/gi,"So, "],[/\bfurthermore,\s*/gi,"Also, "],[/\bmoreover,\s*/gi,"Also, "],[/\bit is worth noting that\s*/gi,""],[/\bdelve into\b/gi,"look at"],[/\bleverage\b/gi,"use"],[/\bseamless\b/gi,"smooth"]];
+function humanize(t){
+  let s=t.replace(/\*\*(.+?)\*\*/g,"$1").replace(/^\s*#{1,4}\s*/gm,"").replace(/^\s*[-•*]\s+/gm,"").replace(/\s*—\s*/g,", ");
+  REPL.forEach(([r,x])=>{s=s.replace(r,x)});
+  s=s.replace(/(^|[.!?]\s+|\n)([a-záéíóúñ])/g,(m,a,b)=>a+b.toUpperCase());
+  s=s.split("\n").map(line=>line.replace(/[^.!?]+[.!?]*/g,sn=>{
+    if(sn.split(/\s+/).length<=26)return sn;
+    const m=sn.match(/^(.{50,}?),\s+(pero|aunque|but)\s+(.*)$/s);
+    return m?m[1]+". "+m[2][0].toUpperCase()+m[2].slice(1)+" "+m[3]:sn;
+  })).join("\n");
+  return s.replace(/[ \t]{2,}/g," ").replace(/ ,/g,",").trim();
+}
+$("hum").onclick=()=>{
+  const t=$("t").value.trim();if(!t)return;
+  const o=humanize(t),a=analyze(t).score,b=analyze(o).score;
+  $("ho").value=o;$("hbox").classList.remove("hide");
+  $("hmsg").textContent="Puntuación de IA: "+a+"% → "+b+"%. Es una reescritura por reglas (quita muletillas, formato de chatbot y parte frases largas): no garantiza nada ante otros detectores. Para un resultado natural, revísala y añade tu propia voz, ejemplos y detalles.";
+  $("hbox").scrollIntoView({behavior:"smooth"});
+};
+$("cp").onclick=async()=>{try{await navigator.clipboard.writeText($("ho").value);$("cpm").textContent="Copiado ✓"}catch(e){$("ho").select();$("cpm").textContent="Selecciona y copia (Ctrl+C)"}};
+$("re").onclick=()=>{$("t").value=$("ho").value;$("t").oninput();run()};
+const esR=s=>s.replace(/[.*+?^${}()|[\]\\]/g,"\\$&");
+function sentP(s,mu){
+  const l=s.toLowerCase(),w=(l.match(/\S+/g)||[]).length;
+  if(w<3)return 0;
+  let p=0.15;
+  PHRASES.forEach(x=>{if(l.includes(x))p+=0.3});
+  if(STARTERS.some(x=>l.trim().startsWith(x)))p+=0.15;
+  if(/\*\*|^\s*#|—/.test(s))p+=0.15;
+  if(w>12)p+=0.2*(1-Math.min(1,Math.abs(w-mu)/(mu||1)));
+  const ab=(l.match(/\p{L}*(?:ción|ciones|idad|idades|mente|ismo|tion|ity|ness)(?!\p{L})/gu)||[]).length/w;
+  p+=Math.min(0.2,ab*1.2);
+  if((s.match(PERSONAL)||[]).length)p-=0.25;
+  if(/[?!]/.test(s)||w<7)p-=0.15;
+  return clamp(p);
+}
+const _an0=analyze;
+analyze=function(text){
+  const r=_an0(text);
+  const all=text.split("\n").flatMap(l=>l.match(/[^.!?]+[.!?]*/g)||[]);
+  const mu=mean(all.map(x=>(x.match(/\S+/g)||[]).length).filter(n=>n>2));
+  let fl=0,tot=0;
+  r.lines=text.split("\n").map(line=>(line.match(/[^.!?]+[.!?]*/g)||[]).map(t=>{
+    const w=(t.match(/\S+/g)||[]).length,p=sentP(t,mu);tot+=w;if(p>=0.5)fl+=w;return{t,p};
+  }));
+  r.share=fl/Math.max(1,tot);
+  const sc=r.out;
+  r.edited=Math.round(100*clamp((sc[0].s+sc[5].s)/2-sc[3].s))*(r.share<0.6?1:0);
+  const ex0=(()=>{
+    const s0=all.map(x=>x.trim()).filter(x=>x.split(/\s+/).length>2);
+    const pk=new Set(text.match(/[;:()?!"“”¿¡…\-—]/g)||[]).size;
+    const e1=clamp((5-pk)/5);
+    const fw=s0.map(x=>x.split(/\s+/)[0].toLowerCase()),dv=new Set(fw).size/Math.max(1,fw.length);
+    const e2=fw.length>5?clamp((0.75-dv)/0.35):0.3;
+    const vg=(text.toLowerCase().match(/\b(diversos|diferentes|varios|importante|significativo|clave|esencial|relevante|numerosos|various|significant|essential|key|important|crucial)\b/g)||[]).length;
+    const e3=clamp(vg/Math.max(1,r.words)/0.025);
+    r.out.push({n:'Variedad de puntuación',v:pk+' tipos',s:e1,d:'La IA suele usar pocos signos distintos (; : ( ) ? ! …).'},{n:'Variedad de inicios de frase',v:Math.round(dv*100)+'% distintos',s:e2,d:'Si muchas frases arrancan igual, es sospechoso.'},{n:'Palabras vagas o de relleno',v:vg,s:e3,d:'Adjetivos genéricos como “importante”, “clave”, “diversos”.'});
+    return(e1+e2+e3)/3;
+  })();
+  let f=clamp(0.5*r.score/100+0.4*r.share+0.1*ex0)*100;
+  if(r.words<80)f*=0.7;
+  r.doc=r.score;r.score=Math.round(f);
+  return r;
+};
+function render(text,r){
+  $("res").classList.remove("hide");
+  const s=r.score,col=s<35?"#12b886":s<60?"#e8a317":"#d6336c";
+  $("sc").textContent=s+"%";$("ga").setAttribute("stroke-dasharray",s+" 100");
+  $("vd").textContent=s<35?"Probablemente humano":s<60?"Resultado mixto / incierto":"Probablemente generado por IA";$("vd").style.color=col;
+  const rows=[["#6741d9","Se parece a texto de IA",s],["#12b886","Texto humano",100-s]];
+  if(r.edited>=15)rows.push(["#e8a317","Indicio de IA editada o parafraseada",r.edited]);
+  $("lg").innerHTML=rows.map(x=>`<div><i class="dot" style="background:${x[0]}"></i>${x[1]}<span class="pc">${x[2]}%</span></div>`).join("");
+  $("exp").textContent=(r.words<80?"Texto corto (menos de 80 palabras): fiabilidad baja. ":"")+"Se analizaron "+r.words+" palabras. "+Math.round(r.share*100)+"% del texto se parece a IA frase a frase; el resto de la nota viene de los indicadores globales.";
+  $("ms").innerHTML=r.out.map(m=>{const c=m.s>0.6?"var(--bad)":m.s>0.3?"var(--mid)":"var(--ok)";return `<div class="m"><b>${m.n}</b><span style="color:${c}">${m.v}</span><small>${m.d}</small></div>`}).join("");
+  const body=r.lines.map(ls=>ls.map(o=>{
+    let h=esc(o.t);
+    if(o.p>=0.35)PHRASES.forEach(x=>{if(o.t.toLowerCase().includes(x))h=h.replace(new RegExp(esR(x),"gi"),m=>"<b>"+m+"</b>")});
+    const c=o.p>=0.5?"h2":o.p>=0.35?"h1":"";
+    return c?`<span class="${c}" title="Probabilidad de IA: ${Math.round(o.p*100)}%">${h}</span>`:h;
+  }).join("")).join("\n");
+  $("hl").innerHTML=`<p class="note"><span class="h2">&nbsp;rosa&nbsp;</span> frase con alta probabilidad de IA · <span class="h1">&nbsp;amarillo&nbsp;</span> dudosa · <b>subrayado</b> muletilla típica</p>`+body;
+  $("res").scrollIntoView({behavior:"smooth"});
+}
+let docs=[];
+const AITOOLS=/chatgpt|openai|claude|anthropic|gemini|copilot|jasper|writesonic|quillbot|notion ai|perplexity|deepseek|reportlab|weasyprint/i;
+const ZW=/[\u200b\u200c\u200d\u2060\ufeff\u202f\u00ad]/g;
+const dec=s=>s.replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&apos;/g,'\u0027').replace(/&amp;/g,'&');
+const tagText=(x,re,j)=>[...x.matchAll(re)].map(m=>dec(m[1])).join(j);
+async function readDoc(f){
+  const n=f.name.toLowerCase(),meta=[];let txt='',secs=null,pdf=null;
+  if(n.endsWith('.pdf')){
+    pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    pdf=await pdfjsLib.getDocument({data:new Uint8Array(await f.arrayBuffer())}).promise;
+    secs=[];
+    for(let i=1;i<=pdf.numPages;i++){
+      const c=await (await pdf.getPage(i)).getTextContent();let s='';
+      for(const it of c.items)s+=it.str+(it.hasEOL?'\n':' ');
+      s=s.replace(/-\n(?=\p{Ll})/gu,'').replace(/([^\n.!?:])\n(?!\n)/g,'$1 ').replace(/ {2,}/g,' ');
+      secs.push({l:'Pág. '+i,t:s});
+    }
+    txt=secs.map(s=>s.t).join('\n\n');
+    try{const inf=(await pdf.getMetadata()).info||{};[['Title','Título'],['Author','Autor'],['Creator','Creador'],['Producer','Productor'],['CreationDate','Creado'],['ModDate','Modificado']].forEach(([k,l])=>{if(inf[k])meta.push([l,String(inf[k])])})}catch(e){}
+    meta.push(['Páginas',String(pdf.numPages)]);
+  }else if(/\.(docx|pptx|xlsx|odt|odp)$/.test(n)){
+    const z=await JSZip.loadAsync(await f.arrayBuffer());
+    const rd=async p=>z.file(p)?await z.file(p).async('string'):'';
+    if(n.endsWith('.docx')){
+      const x=await rd('word/document.xml');
+      txt=x.split(/<\/w:p>/).map(p=>tagText(p,/<w:t[^>]*>([^<]*)<\/w:t>/g,'')).join('\n');
+    }else if(n.endsWith('.pptx')){
+      const ks=Object.keys(z.files).filter(k=>/^ppt\/slides\/slide\d+\.xml$/.test(k)).sort((a,b)=>a.match(/(\d+)\.xml/)[1]-b.match(/(\d+)\.xml/)[1]);
+      secs=[];for(const k of ks)secs.push({l:'Diap. '+k.match(/(\d+)\.xml/)[1],t:tagText(await rd(k),/<a:t>([^<]*)<\/a:t>/g,' ')});
+      txt=secs.map(s=>s.t).join('\n\n');
+    }else if(n.endsWith('.xlsx')){
+      txt=tagText(await rd('xl/sharedStrings.xml'),/<t[^>]*>([^<]*)<\/t>/g,'\n');
+    }else{
+      txt=dec((await rd('content.xml')).replace(/<\/text:(p|h)>/g,'\n').replace(/<[^>]+>/g,''));
+    }
+    const core=await rd('docProps/core.xml');
+    [['creator','Autor'],['lastModifiedBy','Última modificación por'],['created','Creado'],['modified','Modificado'],['revision','Revisión']].forEach(([t,l])=>{const m=core.match(new RegExp('<(?:\\w+:)?'+t+'[^>]*>([^<]+)<'));if(m)meta.push([l,dec(m[1])])});
+    const app=await rd('docProps/app.xml');
+    let m=app.match(/<Application>([^<]*)</);if(m)meta.push(['Aplicación',dec(m[1])]);
+    m=app.match(/<TotalTime>(\d+)</);if(m)meta.push(['Tiempo de edición (min)',m[1]]);
+  }else{
+    txt=await f.text();
+    if(n.endsWith('.rtf'))txt=txt.replace(/\\par[d]?/g,'\n').replace(/\{\\\*[^}]*\}/g,'').replace(/\\'[0-9a-f]{2}/gi,'').replace(/\\[a-z]+-?\d* ?/gi,'').replace(/[{}]/g,'');
+    else if(/\.html?$/.test(n))txt=new DOMParser().parseFromString(txt,'text/html').body.textContent;
+    else if(n.endsWith('.json')){const o=[];(function w(v){if(typeof v==='string')o.push(v);else if(v&&typeof v==='object')Object.values(v).forEach(w)})(JSON.parse(txt));txt=o.join('\n')}
+  }
+  return{txt,meta,secs,pdf};
+}
+function build(txt,name,secs,meta){
+  const r=analyze(txt);
+  if(!secs){const w=txt.split(/\s+/);secs=[];for(let i=0;i<w.length;i+=250)secs.push({l:'Bloque '+(secs.length+1),t:w.slice(i,i+250).join(' ')})}
+  const ss=secs.map(s=>({l:s.l,s:(s.t.match(/\S+/g)||[]).length>=40?analyze(s.t).score:null}));
+  const vals=ss.filter(x=>x.s!==null).map(x=>x.s),flags=[];let boost=0;
+  const zw=(txt.match(ZW)||[]).length;
+  if(zw>=3){flags.push('Hay '+zw+' caracteres invisibles (espacios de ancho cero, etc.): pueden ser marcas de agua o restos de copiar y pegar.');boost+=5}
+  meta.forEach(([k,v])=>{if(AITOOLS.test(v)){flags.push('El metadato «'+k+'» menciona una herramienta de IA o de generación automática: '+v);boost+=15}});
+  const tt=meta.find(m=>m[0]==='Tiempo de edición (min)');
+  if(tt&&+tt[1]<=1&&r.words>300){flags.push('Tiempo de edición ≈ 0 min en un texto largo: probablemente se pegó desde otra fuente.');boost+=5}
+  if(vals.length>=3&&sd(vals)>22)flags.push('El estilo cambia mucho entre secciones (desviación '+Math.round(sd(vals))+'): posible mezcla de partes humanas y de IA.');
+  r.score=Math.min(100,r.score+boost);
+  return{name,txt,r,ss,meta,flags};
+}
+function extra(d){
+  $('map').innerHTML=d.ss.map(x=>{const c=x.s===null?'var(--bd)':x.s<35?'#12b886':x.s<60?'#e8a317':'#d6336c';return `<div style="display:flex;align-items:center;gap:8px;margin:3px 0"><span style="width:84px;font-size:.8rem;color:var(--mut)">${esc(x.l)}</span><div class="meter" style="flex:1;margin:0;height:10px"><i style="width:${x.s===null?0:x.s}%;background:${c}"></i></div><b style="width:44px;text-align:right">${x.s===null?'—':x.s+'%'}</b></div>`}).join('')||'<p class="note">No hay secciones con texto suficiente.</p>';
+  $('meta').innerHTML=(d.meta.length?'<div class="grid">'+d.meta.map(m=>`<div class="m"><b>${esc(m[0])}</b><span style="font-size:.95rem;overflow-wrap:anywhere">${esc(m[1])}</span></div>`).join('')+'</div>':'<p class="note">Este formato no trae metadatos.</p>')+d.flags.map(f=>`<p>⚠️ ${esc(f)}</p>`).join('')+(d.flags.length?'':'<p class="note">Sin señales forenses adicionales.</p>');
+}
+function run(){const t=$('t').value.trim();if(!t){$('wc').textContent='Escribe o pega algún texto.';return}const d=build(t,'Texto pegado',null,[]);render(t,d.r);extra(d);curDoc=d;preview(d,'orig')}
+function show(i){const d=docs[i];$('t').value=d.txt;$('t').oninput();render(d.txt,d.r);extra(d);curDoc=d;preview(d,'orig')}
+function renderList(){
+  $('fbox').classList.toggle('hide',docs.length<2);
+  $('ft').innerHTML=docs.map((d,i)=>{
+    if(d.err)return `<div class="m" style="margin-bottom:8px"><b>${esc(d.name)}</b><small>${esc(d.err)}</small></div>`;
+    const s=d.r.score,c=s<35?'#12b886':s<60?'#e8a317':'#d6336c';
+    return `<div class="m" style="margin-bottom:8px;cursor:pointer;display:flex;gap:10px;align-items:center" onclick="show(${i})"><div style="flex:1;overflow-wrap:anywhere"><b>${esc(d.name)}</b><small>${d.r.words} palabras · ${d.flags.length} señal(es) forense(s)</small></div><span style="color:${c};font-size:1.4rem">${s}%</span></div>`;
+  }).join('');
+}
+$('f').onchange=async e=>{
+  const fs=[...e.target.files];if(!fs.length)return;docs=[];
+  for(let k=0;k<fs.length;k++){
+    $('wc').textContent='Analizando '+(k+1)+'/'+fs.length+': '+fs[k].name+'…';
+    try{
+      const x=await readDoc(fs[k]);
+      if(x.txt.trim().length<30){docs.push({name:fs[k].name,err:'Sin texto legible (¿escaneado o vacío?).'});continue}
+      {const d=build(x.txt,fs[k].name,x.secs,x.meta);d.pdf=x.pdf;docs.push(d)}
+    }catch(err){docs.push({name:fs[k].name,err:'No se pudo leer este archivo.'})}
+  }
+  $('wc').textContent='';renderList();
+  const i=docs.findIndex(d=>!d.err);
+  if(i>=0)show(i);else $('wc').textContent='Ningún archivo tenía texto legible.';
+  e.target.value='';
+};
+let curDoc=null,pvTok=0;
+function heat(r){return r.lines.map(ls=>ls.map(o=>{const h=esc(o.t),c=o.p>=0.5?'h2':o.p>=0.35?'h1':'';return c?`<span class="${c}" title="Probabilidad de IA: ${Math.round(o.p*100)}%">${h}</span>`:h}).join('')).join('\n')}
+async function preview(d,mode){
+  const tok=++pvTok,box=$('pvb');
+  $('pvt').style.display=d.pdf?'flex':'none';
+  $('tabO').className=mode==='orig'?'':'sec';$('tabT').className=mode==='text'?'':'sec';
+  if(!d.pdf||mode==='text'){$('pvn').textContent='Rosa = alta probabilidad de IA · amarillo = dudosa. Pasa el cursor por una frase para ver su porcentaje.';box.innerHTML='<div class="paper">'+heat(d.r)+'</div>';return}
+  $('pvn').textContent='Páginas originales con las frases sospechosas resaltadas (rosa = alta, amarillo = dudosa).';
+  box.innerHTML='';
+  const fl=d.r.lines.flat().filter(o=>o.p>=0.35).map(o=>({k:o.t.replace(/\s+/g,' ').trim(),h:o.p>=0.5}));
+  const n=Math.min(d.pdf.numPages,12);
+  for(let i=1;i<=n;i++){
+    if(tok!==pvTok)return;
+    const pg=await d.pdf.getPage(i),vp=pg.getViewport({scale:1.2});
+    const w=document.createElement('div');w.className='pgw';
+    const cv=document.createElement('canvas');cv.width=vp.width;cv.height=vp.height;w.appendChild(cv);box.appendChild(w);
+    const cx=cv.getContext('2d');
+    await pg.render({canvasContext:cx,viewport:vp}).promise;
+    const tc=await pg.getTextContent();
+    tc.items.forEach(it=>{
+      const k=it.str.replace(/\s+/g,' ').trim();if(k.length<10)return;
+      const m=fl.find(x=>x.h&&x.k.includes(k))||fl.find(x=>x.k.includes(k));if(!m)return;
+      const t=pdfjsLib.Util.transform(vp.transform,it.transform),h=Math.hypot(t[2],t[3]);
+      cx.fillStyle=m.h?'rgba(214,51,108,.34)':'rgba(232,163,23,.32)';
+      cx.fillRect(t[4],t[5]-h*0.9,it.width*vp.scale,h*1.15);
+    });
+    const sc=d.ss[i-1];
+    if(sc&&sc.s!==null){const b=document.createElement('div');b.className='pgb';b.textContent='Pág. '+i+' · '+sc.s+'%';b.style.background=sc.s<35?'#12b886':sc.s<60?'#e8a317':'#d6336c';w.appendChild(b)}
+  }
+  if(d.pdf.numPages>n){const p=document.createElement('p');p.className='note';p.textContent='Se muestran las primeras '+n+' de '+d.pdf.numPages+' páginas; el análisis cubre todo el documento.';box.appendChild(p)}
+}
+$('tabO').onclick=()=>curDoc&&preview(curDoc,'orig');
+$('tabT').onclick=()=>curDoc&&preview(curDoc,'text');
+$("go").onclick=run;
+$("clr").onclick=()=>{$("t").value="";$("res").classList.add("hide");$("wc").textContent=""};
+$("t").oninput=()=>{const n=($("t").value.match(/\S+/g)||[]).length;$("wc").textContent=n+" palabras"};
+$("f").onchange=async e=>{
+  const f=e.target.files[0];if(!f)return;
+  try{
+    let txt="";
+    if(/\.pdf$/i.test(f.name)){
+      if(!window.pdfjsLib){$("wc").textContent="No se pudo cargar el lector de PDF.";return}
+      pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+      $("wc").textContent="Leyendo PDF…";
+      const pdf=await pdfjsLib.getDocument({data:new Uint8Array(await f.arrayBuffer())}).promise;
+      const pages=[];
+      for(let i=1;i<=pdf.numPages;i++){
+        const c=await (await pdf.getPage(i)).getTextContent();
+        let line="",y=null,buf=[];
+        for(const it of c.items){
+          if(y!==null&&Math.abs(it.transform[5]-y)>2){buf.push(line);line=""}
+          line+=it.str+(it.hasEOL?"\n":"");y=it.transform[5];
+        }
+        buf.push(line);pages.push(buf.join("\n"));
+      }
+      txt=pages.join("\n\n").replace(/-\n(?=\p{Ll})/gu,"").replace(/([^\n.!?:])\n(?!\n)/g,"$1 ");
+      if(txt.trim().length<30){$("wc").textContent="Este PDF parece escaneado (sin texto seleccionable); no se puede analizar.";return}
+    }else if(/\.docx$/i.test(f.name)){
+      if(!window.mammoth){$("wc").textContent="No se pudo cargar el lector de .docx.";return}
+      txt=(await mammoth.extractRawText({arrayBuffer:await f.arrayBuffer()})).value;
+    }else{
+      txt=await f.text();
+      if(/\.html?$/i.test(f.name))txt=new DOMParser().parseFromString(txt,"text/html").body.textContent;
+    }
+    $("t").value=txt;$("t").oninput();run();
+  }catch(err){$("wc").textContent="No se pudo leer el archivo."}
+};
+</script>
+</body>
+</html>

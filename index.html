@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>VeritAI - Detector Forense de Texto Generado por IA</title>
+  <meta name="description" content="Detector profesional de texto generado por Inteligencia Artificial (ChatGPT, Claude, Gemini, Copilot). Análisis heurístico, lingüístico y forense 100% privado en tu navegador.">
+  <link rel="icon" type="image/svg+xml" href="assets/images/favicon.svg">
+  <link rel="stylesheet" href="assets/css/styles.css">
+  <link rel="stylesheet" href="assets/css/print.css" media="print">
+</head>
+<body>
+
+  <div class="app-container">
+
+    <header class="app-header">
+      <div class="brand-wrapper">
+        <img src="assets/images/logo.svg" alt="VeritAI Logo" class="brand-logo">
+        <div>
+          <h1 class="brand-title">
+            VeritAI
+            <span class="brand-badge">PRO v2.0</span>
+          </h1>
+          <p class="brand-subtitle">Detector lingüístico y forense de contenido generado por IA</p>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <button id="btnSampleAi" class="btn btn-secondary btn-sm" title="Probar con un texto redactado por IA">
+          <svg class="btn-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg>
+          Probar ejemplo IA
+        </button>
+        <button id="btnSampleHuman" class="btn btn-secondary btn-sm" title="Probar con un texto redactado por un humano">
+          <svg class="btn-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+          Probar ejemplo Humano
+        </button>
+        <button id="soundToggle" class="btn btn-secondary btn-icon" title="Activar/Silenciar efectos de sonido" aria-label="Efectos de sonido">
+          <span id="soundIcon">
+            <svg class="btn-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
+          </span>
+        </button>
+        <button id="themeToggle" class="btn btn-secondary btn-icon" title="Cambiar tema claro/oscuro" aria-label="Cambiar tema">
+          <span id="themeIcon">
+            <svg class="btn-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+          </span>
+        </button>
+      </div>
+    </header>
+
+    <main>
+      <section class="card input-section">
+        <div class="drop-zone" id="dropZone">
+          <span class="drop-zone-icon">
+            <svg class="drop-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
+          </span>
+          <p class="drop-zone-text">Arrastra y suelta tus archivos aquí, o haz clic para seleccionarlos</p>
+          <p class="drop-zone-hint">Soporta análisis simultáneo de múltiples documentos. Procesamiento 100% local en tu navegador.</p>
+          <div class="format-tags">
+            <span class="format-tag">PDF</span>
+            <span class="format-tag">DOCX</span>
+            <span class="format-tag">PPTX</span>
+            <span class="format-tag">XLSX / XLS</span>
+            <span class="format-tag">CSV / TSV</span>
+            <span class="format-tag">ODT</span>
+            <span class="format-tag">RTF</span>
+            <span class="format-tag">TXT</span>
+            <span class="format-tag">HTML</span>
+            <span class="format-tag">JSON</span>
+          </div>
+          <input type="file" id="fileInput" multiple accept=".txt,.md,.csv,.tsv,.json,.rtf,.docx,.pptx,.xlsx,.xls,.xlsm,.xltx,.odt,.odp,.pdf,.html" style="display:none">
+        </div>
+
+        <div class="text-editor-wrapper">
+          <textarea id="textArea" class="text-editor" placeholder="Pega aquí el texto a analizar (se recomiendan al menos 80 palabras para un resultado estadísticamente significativo)…"></textarea>
+          
+          <div class="editor-status-bar">
+            <div class="stats-group">
+              <span class="stat-item" id="wordCount">0 palabras</span>
+              <span>•</span>
+              <span class="stat-item" id="charCount">0 caracteres</span>
+              <span>•</span>
+              <span class="stat-item" id="readingTime">~0 min lectura</span>
+            </div>
+
+            <div class="sensitivity-wrapper" title="Calibra el umbral de detección según el estilo del texto">
+              <span class="sensitivity-label">Calibración:</span>
+              <div class="segmented-control" id="sensitivitySelector">
+                <button type="button" class="seg-btn" data-sens="lenient" title="Permisiva (ideal para textos formales o académicos)">Académica</button>
+                <button type="button" class="seg-btn active" data-sens="balanced" title="Equilibrada (recomendada para todo tipo de texto)">Equilibrada</button>
+                <button type="button" class="seg-btn" data-sens="strict" title="Estricta (detecta IA parafraseada o ligeramente editada)">Estricta</button>
+              </div>
+            </div>
+
+            <div class="actions-group">
+              <button id="btnPaste" class="btn btn-secondary" title="Pegar desde el portapapeles">
+                <svg class="btn-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>
+                Pegar
+              </button>
+              <button id="btnClear" class="btn btn-secondary" title="Limpiar texto" disabled>
+                <svg class="btn-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
+                Limpiar
+              </button>
+              <button id="btnAnalyze" class="btn btn-lg" title="Iniciar análisis (Ctrl+Enter)">
+                <svg class="btn-icon-svg btn-bolt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                Analizar texto
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div id="analysisScanner" class="analysis-scanner hide">
+          <div class="scanner-bar">
+            <div class="scanner-laser"></div>
+          </div>
+          <div class="scanner-info">
+            <span class="spinner"></span>
+            <span id="scannerStatusText" class="scanner-status">Analizando perplejidad y burstiness léxica...</span>
+          </div>
+        </div>
+      </section>
+
+      <section id="filesSection" class="card hide">
+        <h3 class="card-title">📚 Documentos en lote</h3>
+        <div id="filesList" class="doc-queue-grid"></div>
+      </section>
+
+      <section id="resultsSection" class="results-grid hide">
+        
+        <div class="card preview-card">
+          <div class="preview-header">
+            <h3 class="card-title" style="margin:0">
+              <svg class="title-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><polyline points="14 2 14 8 20 8"/><line x1="16" x2="8" y1="13" y2="13"/><line x1="16" x2="8" y1="17" y2="17"/></svg>
+              Visor Interactivo y Mapa de Calor
+            </h3>
+            <div class="preview-controls">
+              <div class="sentence-nav-group" id="sentenceNavGroup" style="display:none">
+                <span class="nav-label">Frases IA:</span>
+                <button id="btnPrevSentence" class="btn-nav-arrow" title="Oración anterior" aria-label="Oración anterior">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+                </button>
+                <span id="sentenceCounter" class="sentence-counter-badge">0/0</span>
+                <button id="btnNextSentence" class="btn-nav-arrow" title="Oración siguiente" aria-label="Oración siguiente">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                </button>
+                <button id="btnOpenCorrections" class="btn btn-secondary btn-xs" title="Abrir editor para corregir frases en el documento">
+                  ✏️ Corregir
+                </button>
+              </div>
+
+              <div class="tabs" id="previewTabs" style="display:none">
+                <button id="tabHeatmapView" class="tab-btn active">Texto con Marcado</button>
+                <button id="tabDocView" class="tab-btn">PDF Original</button>
+              </div>
+              <select id="filterHeatmap" class="select-filter" title="Filtrar oraciones">
+                <option value="all">Todas las frases</option>
+                <option value="ai">Solo sospechosas (≥48%)</option>
+                <option value="phrases">Solo con muletillas</option>
+              </select>
+            </div>
+          </div>
+          
+          <div id="previewNote"></div>
+          <div id="previewBox" class="preview-box"></div>
+        </div>
+
+        <div class="results-col">
+          
+          <div class="card gauge-card">
+            <h3 class="card-title" style="margin-bottom:0">🔎 Probabilidad de Generación por IA</h3>
+            
+            <div class="gauge-wrapper">
+              <div class="gauge-glow-aura" id="gaugeAura"></div>
+              <svg viewBox="0 0 220 125" class="gauge-svg">
+                <defs>
+                  <linearGradient id="gradHuman" x1="0%" y1="100%" x2="100%" y2="0%">
+                    <stop offset="0%" stop-color="#10b981" />
+                    <stop offset="100%" stop-color="#06b6d4" />
+                  </linearGradient>
+                  <linearGradient id="gradMixed" x1="0%" y1="100%" x2="100%" y2="0%">
+                    <stop offset="0%" stop-color="#f59e0b" />
+                    <stop offset="100%" stop-color="#fb923c" />
+                  </linearGradient>
+                  <linearGradient id="gradAi" x1="0%" y1="100%" x2="100%" y2="0%">
+                    <stop offset="0%" stop-color="#ef4444" />
+                    <stop offset="100%" stop-color="#ec4899" />
+                  </linearGradient>
+                  <filter id="gaugeGlow" x="-20%" y="-20%" width="140%" height="140%">
+                    <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="currentColor" flood-opacity="0.35" />
+                  </filter>
+                </defs>
+
+                <path d="M 25 110 A 85 85 0 0 1 195 110" fill="none" stroke="var(--border-color)" stroke-width="2" stroke-dasharray="2 10" stroke-linecap="round" opacity="0.6"/>
+                <path d="M 25 110 A 85 85 0 0 1 195 110" fill="none" stroke="var(--bg-input)" stroke-width="16" stroke-linecap="round"/>
+                <path d="M 25 110 A 85 85 0 0 1 195 110" fill="none" stroke="var(--border-color)" stroke-width="16" stroke-linecap="round" opacity="0.3"/>
+
+                <path id="gaugeArc" d="M 25 110 A 85 85 0 0 1 195 110" fill="none" stroke="url(#gradHuman)" stroke-width="16" stroke-linecap="round" pathLength="100" stroke-dasharray="0 100" style="transition: stroke-dasharray 0.9s cubic-bezier(0.34, 1.3, 0.64, 1), stroke 0.4s ease;"/>
+
+                <circle cx="25" cy="110" r="3" fill="var(--text-muted)" opacity="0.5"/>
+                <circle cx="110" cy="25" r="3" fill="var(--text-muted)" opacity="0.5"/>
+                <circle cx="195" cy="110" r="3" fill="var(--text-muted)" opacity="0.5"/>
+
+                <circle id="gaugeNeedleTip" cx="25" cy="110" r="5.5" fill="#ffffff" stroke="#10b981" stroke-width="3" style="transition: cx 0.9s cubic-bezier(0.34, 1.3, 0.64, 1), cy 0.9s cubic-bezier(0.34, 1.3, 0.64, 1), stroke 0.4s ease; filter: drop-shadow(0 0 5px currentColor);"/>
+              </svg>
+              <div class="gauge-center-content">
+                <div id="scoreValue" class="gauge-score-value">0%</div>
+                <div class="gauge-sublabel">PROBABILIDAD IA</div>
+              </div>
+            </div>
+
+            <div id="verdictBadge" class="verdict-badge">Calculando...</div>
+            <p id="verdictMessage" class="verdict-message"></p>
+
+            <div class="breakdown-list">
+              <div class="breakdown-row">
+                <span class="breakdown-label">
+                  <span class="dot-indicator" style="background-color: var(--color-danger)"></span>
+                  Patrones sintácticos de IA
+                </span>
+                <span id="breakdownAi" class="breakdown-val">0%</span>
+              </div>
+              <div class="breakdown-row">
+                <span class="breakdown-label">
+                  <span class="dot-indicator" style="background-color: var(--color-success)"></span>
+                  Rasgos de redacción humana
+                </span>
+                <span id="breakdownHuman" class="breakdown-val">100%</span>
+              </div>
+              <div class="breakdown-row hide" id="breakdownEditedRow">
+                <span class="breakdown-label">
+                  <span class="dot-indicator" style="background-color: var(--color-warning)"></span>
+                  Indicios de IA parafraseada / editada
+                </span>
+                <span id="breakdownEdited" class="breakdown-val">0%</span>
+              </div>
+            </div>
+
+            <div class="results-toolbar">
+              <button id="btnHumanize" class="btn btn-outline" style="flex:1">
+                <svg class="btn-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/></svg>
+                Humanizar texto
+              </button>
+              <button id="btnPrintReport" class="btn btn-secondary" title="Imprimir informe o guardar como PDF">
+                <svg class="btn-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect width="12" height="8" x="6" y="14"/></svg>
+                Imprimir / PDF
+              </button>
+              <button id="btnExportJson" class="btn btn-secondary" title="Exportar datos en formato JSON">
+                <svg class="btn-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+                Exportar JSON
+              </button>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3 class="card-title">
+              <svg class="title-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" x2="18" y1="20" y2="10"/><line x1="12" x2="12" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="14"/></svg>
+              Variación por Secciones del Documento
+            </h3>
+            <p class="note">Cada barra representa una página, diapositiva o fragmento de ~250 palabras para identificar qué fragmentos específicos tienen mayor carga de IA.</p>
+            <div id="sectionMap" style="margin-top: 12px;"></div>
+          </div>
+
+          <div class="card" id="forensicSection">
+            <h3 class="card-title">
+              <svg class="title-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/></svg>
+              Señales Forenses y Metadatos
+            </h3>
+            <div id="forensicMeta"></div>
+            <div id="forensicFlags" style="margin-top: 10px;"></div>
+          </div>
+
+          <div class="card">
+            <h3 class="card-title">
+              <svg class="title-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="4" y1="21" y2="14"/><line x1="4" x2="4" y1="10" y2="3"/><line x1="12" x2="12" y1="21" y2="12"/><line x1="12" x2="12" y1="8" y2="3"/><line x1="20" x2="20" y1="21" y2="16"/><line x1="20" x2="20" y1="12" y2="3"/><line x1="1" x2="7" y1="14" y2="14"/><line x1="9" x2="15" y1="8" y2="8"/><line x1="17" x2="23" y1="16" y2="16"/></svg>
+              Indicadores Estilométricos Detallados
+            </h3>
+            <div id="metricsGrid" class="metrics-grid"></div>
+          </div>
+
+        </div>
+      </section>
+
+      <section id="humanizeSection" class="card humanize-card hide">
+        <h3 class="card-title">
+          <svg class="title-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/></svg>
+          Versión Humanizada
+        </h3>
+        <div id="humanizeMsg" class="humanize-msg"></div>
+        <textarea id="humanizeOutput" class="text-editor" style="min-height: 160px;"></textarea>
+        <div class="editor-status-bar" style="margin-top: 12px;">
+          <div class="actions-group">
+            <button id="btnCopyHumanized" class="btn">
+              <svg class="btn-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+              Copiar versión humanizada
+            </button>
+            <button id="btnReanalyzeHumanized" class="btn btn-secondary">
+              <svg class="btn-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>
+              Analizar esta versión
+            </button>
+          </div>
+          <span class="note" id="copyToast"></span>
+        </div>
+      </section>
+
+    </main>
+
+    <footer class="app-footer">
+      <div>
+        <span class="footer-privacy-badge">🔒 100% Privado: Análisis en el navegador</span>
+      </div>
+      <p class="note">
+        <strong>Aviso ético:</strong> Ningún detector de IA es infalible. Un texto formal, traducciones profesionales o redacciones científicas pueden arrojar falsos positivos, mientras que un texto asistido por IA cuidadosamente reescrito puede no ser detectado. Utilice este informe como una herramienta analítica de apoyo y no como prueba determinante absoluta.
+      </p>
+      <p style="margin-top: 12px; font-size: 0.8rem;">
+        Desplegable en GitHub Pages • Código Abierto • Licencia MIT
+      </p>
+    </footer>
+
+  </div>
+
+  <div id="sentenceTooltip" class="sentence-tooltip hide"></div>
+
+  <div id="toast" class="toast"></div>
+
+  <div id="correctionModal" class="correction-modal hide" role="dialog" aria-modal="true" aria-labelledby="corrTitle">
+    <div class="correction-overlay" id="correctionOverlay"></div>
+    <div class="correction-sheet">
+      <div class="correction-header">
+        <div class="correction-title-row">
+          <span class="correction-badge" id="corrBadge">85% IA</span>
+          <h4 id="corrTitle" class="correction-title">Corregir frase en el documento</h4>
+        </div>
+        <div class="correction-header-actions">
+          <span id="corrCounter" class="corr-counter">1 de 5</span>
+          <button id="btnCloseCorrection" class="btn-close-modal" aria-label="Cerrar">&times;</button>
+        </div>
+      </div>
+      
+      <div class="correction-body">
+        <div class="corr-field-group">
+          <div class="corr-label">Frase en el documento:</div>
+          <div id="corrOriginalText" class="corr-original-box"></div>
+          <div id="corrReasons" class="corr-reasons-list"></div>
+        </div>
+
+        <div class="corr-field-group">
+          <div class="corr-label-row">
+            <span class="corr-label">Tu corrección:</span>
+            <button type="button" id="btnApplySuggestion" class="btn-link-action" title="Rellenar con alternativa humanizada">
+              ⚡ Usar sugerencia humanizada
+            </button>
+          </div>
+          <textarea id="corrEditText" class="corr-textarea" rows="3" placeholder="Escribe aquí la corrección para sustituir la frase en el documento..."></textarea>
+        </div>
+
+        <div class="corr-actions-row">
+          <button type="button" id="btnPrevCorr" class="btn btn-secondary btn-sm" title="Frase sospechosa anterior">
+            ◀ Anterior
+          </button>
+          <button type="button" id="btnNextCorr" class="btn btn-secondary btn-sm" title="Saltar a la siguiente frase">
+            Siguiente ▶
+          </button>
+          <div class="corr-spacer"></div>
+          <button type="button" id="btnApplyCorr" class="btn btn-primary" title="Reemplazar directamente en el documento">
+            <svg class="btn-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            Aplicar corrección
+          </button>
+        </div>
+
+        <div class="corr-footer-actions">
+          <button type="button" id="btnDownloadCorrected" class="btn btn-outline btn-sm" title="Descargar documento corregido completo">
+            <svg class="btn-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+            Descargar corregido (.txt)
+          </button>
+          <button type="button" id="btnCopyCorrected" class="btn btn-secondary btn-sm" title="Copiar todo el documento corregido">
+            <svg class="btn-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+            Copiar corregido
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+  <script src="assets/js/icons.js"></script>
+  <script src="assets/js/audio.js"></script>
+  <script src="assets/js/particles.js"></script>
+  <script src="assets/js/sample-data.js"></script>
+  <script src="assets/js/analyzer.js"></script>
+  <script src="assets/js/document-parser.js"></script>
+  <script src="assets/js/humanizer.js"></script>
+  <script src="assets/js/app.js"></script>
+
+</body>
+</html>
